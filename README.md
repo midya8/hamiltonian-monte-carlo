@@ -15,7 +15,7 @@ Dependency-free Hamiltonian Monte Carlo with explicit leapfrog energy errors, re
 
 High acceptance, low position correlation and plausible pooled moments can each
 hide failed exploration. The later analytic references do not certify the
-sampler or estimate its ESS/MCSE. The current suite has 82 tests.
+sampler or estimate its ESS/MCSE. The current suite has 86 tests.
 
 ## Run offline
 
@@ -310,3 +310,25 @@ The deterministic renderer evaluates the existing analytic reference APIs for ev
 Each line joins window-length summaries, not a sampled trajectory. All40 integer values are drawn without thinning, clipping, fitted smoothing or logarithmic zero replacement. Near-coincident curves are expected: quarter-period q/q²/IID match; identity q/q² match at1; random sign/identity q/IID match. Solid teal, dashed ink and dotted gray distinguish the series when they separate. The figure does not show empirical chains or prove mixing.
 
 Renderer tests check all source N values/counterexamples, every rendered vertex against its data, shared-axis bounds, complete15x40 vertices, malformed/reordered/nonfinite inputs, XML label escaping, no mutation, deterministic committed SVG and JSON/check CLI. CI regenerates and byte-checks the figure. Renderer and SVG are standard-library outputs with no plotting dependency.
+
+## Finite energies can still have an overflowed difference
+
+A standalone leapfrog transition can start at Hamiltonian -1e308 and end at
++1e308 while both endpoints are finite. Subtracting them overflows binary64.
+Previously that infinite energy error could escape the integrator; in either
+sampler, an overflowed difference could then abort the run in the acceptance
+helper instead of becoming a recorded invalid rejection.
+
+The integrator now checks the difference itself. Random walk checks its
+potential difference inside the existing invalid-proposal boundary. These
+transitions are conservatively rejected, the previous state is repeated and
+unavailable energy error is null. Even a mathematically downhill difference
+that overflows is treated as numerically invalid, not automatically accepted.
+This does not recover arbitrary-precision dynamics or fix a bad target callback.
+
+Four added tests exercise finite opposite-sign endpoints, both valid large
+acceptance directions, actual seeded HMC and a smooth random-walk callback.
+The retained full demo JSON, complete observable-curve JSON and both SVGs are
+unchanged. `bash examples/verify_wheel.sh` repeats the full suite, demo, figures,
+module-origin checks and all seven documented input commands from an isolated
+installed wheel. CI requires that reproduction as well.
