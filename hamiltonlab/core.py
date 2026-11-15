@@ -36,8 +36,9 @@ def leapfrog(target,position,momentum,step_size=.1,steps=10,mass=None):
         q=[q[i]+eps*p[i]/m[i] for i in range(2)];u,g=evaluate(target,q)
         factor=.5 if k==n-1 else 1.;p=[p[i]-factor*eps*g[i] for i in range(2)]
     h1=u+kinetic(p,m)
-    if not all(math.isfinite(z) for z in q+p+[h0,h1]):raise ValueError('nonfinite trajectory')
-    return {'position':q,'momentum':p,'initial_hamiltonian':h0,'final_hamiltonian':h1,'energy_error':h1-h0,
+    error=h1-h0
+    if not all(math.isfinite(z) for z in q+p+[h0,h1,error]):raise ValueError('nonfinite trajectory')
+    return {'position':q,'momentum':p,'initial_hamiltonian':h0,'final_hamiltonian':h1,'energy_error':error,
             'potential':u,'gradient_evaluations':n+1,'potential_evaluations':n+1}
 
 
@@ -76,8 +77,8 @@ def sample(target,initial,method='hmc',draws=1000,warmup=200,step_size=.1,steps=
                 invalid=True
         else:
             proposal=[q[i]+eps*rng.gauss(0.,1.) for i in range(2)]
-            try:proposed_u,_=evaluate(counted,proposal);error=proposed_u-current
-            except (ValueError,OverflowError):invalid=True
+            try:proposed_u,_=evaluate(counted,proposal);error=real(proposed_u-current,'energy error')
+            except (ValueError,OverflowError):invalid=True;error=None
         uniform=rng.random()
         while uniform==0.:uniform=rng.random()
         logu=math.log(uniform)
