@@ -1,8 +1,11 @@
-# HamiltonLab
+# Hamiltonian monte carlo
 
 Dependency-free Hamiltonian Monte Carlo with explicit leapfrog energy errors, reversible integrator checks, log-domain Metropolis decisions and complete transition histories. Analytic synthetic targets let finite-chain behavior be compared with known moments, without pretending the moments prove convergence.
 
 ![Gaussian exploration and separated-mode failure](assets/chain-audit.svg)
+
+The repository is now `hamiltonian-monte-carlo`. The Python import and CLI names stay
+`hamiltonlab` for compatibility with existing scripts.
 
 ## Choose an analysis
 
